@@ -1,14 +1,17 @@
 package com.example.binlookup
 
 import android.Manifest.permission.CALL_PHONE
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Bundle
 import android.util.JsonReader
-import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -26,8 +29,14 @@ import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-
     private val bin = Bin()
+    private var historyList: List<String> = listOf()
+    private val appPreferences = "mySettings"
+    private val dbName = "myDB"
+    private val myDB: SQLiteDatabase
+        get() {
+            return openOrCreateDatabase(dbName, MODE_PRIVATE, null)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +44,25 @@ class MainActivity : AppCompatActivity() {
 
         val requestButton: Button = findViewById(R.id.RequestButton)
         val displayText: TextView = findViewById(R.id.tvSchemeTitle)
+        val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
+
+        val mSettings = getSharedPreferences(appPreferences, Context.MODE_PRIVATE)
+
+        // Если первый запуск.
+        if (!mSettings.getBoolean("firstStart", false)) {
+            Databases(myDB).initialDB()
+
+            val editor: SharedPreferences.Editor = mSettings.edit()
+            editor.putBoolean("firstStart", true)
+            editor.apply()
+        } else {
+            updateHistory()
+        }
 
         requestButton.setOnClickListener {
-            val dataField: EditText =  findViewById(R.id.DataField)
             val num = dataField.text
+
+            updateHistory(num.toString())
 
             val gitHubEndpoint = URL("https://lookup.binlist.net/$num")
             val connection: HttpsURLConnection = gitHubEndpoint.openConnection() as HttpsURLConnection
@@ -57,6 +81,17 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun updateHistory(newItem: String? = null) {
+        if (newItem != null) {
+            Databases(myDB).setHistory(newItem)
+        }
+
+        historyList = Databases(myDB).getHistory()
+
+        val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
+        dataField.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, historyList))
     }
 
     private fun fillInValues() {
@@ -209,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         return bank
     }
 
-    fun onClickMap(view: View) {
+    fun onClickMap() {
         val latitude: Float? = bin.country.latitude?.toFloat()
         val longitude: Float? = bin.country.longitude?.toFloat()
         if (latitude != null && longitude != null) {
@@ -221,7 +256,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onClickSite(view: View) {
+    fun onClickSite() {
         if (bin.bank.url != null) {
             val url = "http://" + bin.bank.url
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -229,7 +264,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onClickPhoneNumber(view: View) {
+    fun onClickPhoneNumber() {
         val number = bin.bank.phone
         if (number != null) {
             val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))

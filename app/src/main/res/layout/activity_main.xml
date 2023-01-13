@@ -31,19 +31,18 @@
         android:id="@+id/RequestButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Click"
+        android:text="search"
+        app:layout_constraintBottom_toBottomOf="@+id/DataField"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.504"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/DataField" />
+        app:layout_constraintStart_toEndOf="@+id/DataField"
+        app:layout_constraintTop_toTopOf="@+id/DataField" />
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/DataField"
         android:layout_width="281dp"
         android:layout_height="54dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvBankPhoneNumber" />
 

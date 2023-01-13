@@ -1,6 +1,8 @@
 package com.example.binlookup
 
+import android.Manifest.permission.CALL_PHONE
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.JsonReader
@@ -9,6 +11,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.binlookup.classes.Bank
 import com.example.binlookup.classes.Bin
 import com.example.binlookup.classes.Country
@@ -218,11 +222,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onClickSite(view: View) {
-        val url = "http://" + bin.bank.url
-        if (url != null) {
-            val i = Intent(Intent.ACTION_VIEW)
-            i.data = Uri.parse(url)
-            startActivity(i)
+        if (bin.bank.url != null) {
+            val url = "http://" + bin.bank.url
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)
+        }
+    }
+
+    fun onClickPhoneNumber(view: View) {
+        val number = bin.bank.phone
+        if (number != null) {
+            val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))
+
+            // Проверка на наличие прав на звонки.
+            if (ContextCompat.checkSelfPermission(this, CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                startActivity(intent)
+            } else {
+                // Запросить права на звонки.
+                ActivityCompat.requestPermissions(this, arrayOf(CALL_PHONE), 1)
+            }
         }
     }
 }

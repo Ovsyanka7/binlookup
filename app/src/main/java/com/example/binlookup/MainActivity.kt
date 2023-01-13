@@ -9,17 +9,17 @@ import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Bundle
 import android.util.JsonReader
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.Button
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.binlookup.classes.Bank
 import com.example.binlookup.classes.Bin
 import com.example.binlookup.classes.Country
 import com.example.binlookup.classes.Number
+import com.example.binlookup.recycleradapters.HistoryRecyclerAdapter
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.URL
@@ -38,12 +38,23 @@ class MainActivity : AppCompatActivity() {
             return openOrCreateDatabase(dbName, MODE_PRIVATE, null)
         }
 
+    // При нажатии на элемент из списка истории запросов.
+    private val onItemClick: HistoryRecyclerAdapter.OnItemClickListener =
+        object : HistoryRecyclerAdapter.OnItemClickListener {
+            override fun onItemClick(item: String) {
+                val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
+                val requestButton: Button = findViewById(R.id.RequestButton)
+
+                dataField.setText(item)
+                requestButton.callOnClick()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val requestButton: Button = findViewById(R.id.RequestButton)
-        val displayText: TextView = findViewById(R.id.tvSchemeTitle)
         val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
 
         val mSettings = getSharedPreferences(appPreferences, Context.MODE_PRIVATE)
@@ -76,7 +87,11 @@ class MainActivity : AppCompatActivity() {
                     }
                 } else {
                     runOnUiThread {
-                        displayText.text = "Ошибка"
+                        Toast.makeText(
+                            applicationContext,
+                            "Некорректный ввод",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -92,6 +107,10 @@ class MainActivity : AppCompatActivity() {
 
         val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
         dataField.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, historyList))
+
+        val rvHistory: RecyclerView = findViewById(R.id.rvHistory)
+        rvHistory.adapter = HistoryRecyclerAdapter(historyList, onItemClick)
+        rvHistory.layoutManager = GridLayoutManager(this, 1)
     }
 
     private fun fillInValues() {

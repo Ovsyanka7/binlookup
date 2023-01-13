@@ -235,4 +235,14 @@
         app:layout_constraintStart_toStartOf="@+id/tvBankTitle"
         app:layout_constraintTop_toBottomOf="@+id/tvBankAddress" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvHistory"
+        android:layout_width="409dp"
+        android:layout_height="341dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/DataField"
+        tools:listitem="@layout/recyclerview_history_item" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

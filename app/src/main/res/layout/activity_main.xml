@@ -7,32 +7,230 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/DisplayText"
-        android:layout_width="276dp"
-        android:layout_height="214dp"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:id="@+id/tvSchemeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:text="SCHEME / NETWORK"
+        android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/DataField"
-        android:layout_width="281dp"
-        android:layout_height="54dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.523"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.751" />
+    <TextView
+        android:id="@+id/tvTypeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="104dp"
+        android:text="TYPE"
+        android:textSize="14sp"
+        app:layout_constraintStart_toEndOf="@+id/tvSchemeTitle"
+        app:layout_constraintTop_toTopOf="@+id/tvSchemeTitle" />
 
     <Button
         android:id="@+id/RequestButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button"
-        tools:layout_editor_absoluteX="28dp"
-        tools:layout_editor_absoluteY="42dp" />
+        android:layout_marginTop="10dp"
+        android:text="Click"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.504"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/DataField" />
+
+    <EditText
+        android:id="@+id/DataField"
+        android:layout_width="281dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvBankPhoneNumber" />
+
+    <TextView
+        android:id="@+id/tvScheme"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvSchemeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvSchemeTitle" />
+
+    <TextView
+        android:id="@+id/tvBrandTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="BRAND"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="@+id/tvSchemeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvScheme" />
+
+    <TextView
+        android:id="@+id/tvType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvTypeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvTypeTitle" />
+
+    <TextView
+        android:id="@+id/tvBrand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvBrandTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvBrandTitle" />
+
+    <TextView
+        android:id="@+id/tvPrepaid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvPrepaidTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvPrepaidTitle" />
+
+    <TextView
+        android:id="@+id/tvPrepaidTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="PREPAID"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="@+id/tvTypeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvType" />
+
+    <TextView
+        android:id="@+id/tvCardNumberTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="CARD NUMBER"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="@+id/tvSchemeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvBrand" />
+
+    <TextView
+        android:id="@+id/tvCardNumberLengthTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="LENGTH"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@+id/tvCardNumberTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvCardNumberTitle" />
+
+    <TextView
+        android:id="@+id/tvCardNumberLuhnTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="LUHN"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="@+id/tvCardNumberTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvCardNumberTitle" />
+
+    <TextView
+        android:id="@+id/tvCardNumberLength"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvCardNumberTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvCardNumberLengthTitle" />
+
+    <TextView
+        android:id="@+id/tvCardNumberLuhn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvCardNumberLuhnTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvCardNumberLuhnTitle" />
+
+    <TextView
+        android:id="@+id/tvCountryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="COUNTRY"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="@+id/tvTypeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvPrepaid" />
+
+    <TextView
+        android:id="@+id/tvCountry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="---"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvCountryTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvCountryTitle" />
+
+    <TextView
+        android:id="@+id/tvCountryLatitudeAndLongitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="---"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@+id/tvCountry"
+        app:layout_constraintTop_toBottomOf="@+id/tvCountry" />
+
+    <TextView
+        android:id="@+id/tvBankTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="BANK"
+        app:layout_constraintStart_toStartOf="@+id/tvCardNumberLength"
+        app:layout_constraintTop_toBottomOf="@+id/tvCardNumberLength" />
+
+    <TextView
+        android:id="@+id/tvBankAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="---"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/tvBankTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvBankTitle" />
+
+    <TextView
+        android:id="@+id/tvBankPhoneNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="---"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="@+id/tvBankTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvBankWebsite" />
+
+    <TextView
+        android:id="@+id/tvBankWebsite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="---"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="@+id/tvBankTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvBankAddress" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

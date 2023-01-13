@@ -1,6 +1,6 @@
 package com.example.binlookup.classes
 
-data class Bin (
+class Bin (
     var number: Number = Number(),
     var scheme: String? = null,
     var type: String? = null,

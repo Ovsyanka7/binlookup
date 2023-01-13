@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val requestButton: Button = findViewById(R.id.RequestButton)
-        val displayText: TextView = findViewById(R.id.DisplayText)
+        val displayText: TextView = findViewById(R.id.tvSchemeTitle)
 
         requestButton.setOnClickListener {
             val dataField: EditText =  findViewById(R.id.DataField)
@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                 if (connection.responseCode == 200) {
                     readBin(connection)
                     runOnUiThread {
-                        displayText.text = bin.toString()
+                        fillInValues()
                     }
                 } else {
                     runOnUiThread {
@@ -49,6 +49,33 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun fillInValues() {
+        val tvScheme: TextView = findViewById(R.id.tvScheme)
+        val tvType: TextView = findViewById(R.id.tvType)
+        val tvBrand: TextView = findViewById(R.id.tvBrand)
+        val tvPrepaid: TextView = findViewById(R.id.tvPrepaid)
+        val tvCardNumberLength: TextView = findViewById(R.id.tvCardNumberLength)
+        val tvCardNumberLuhn: TextView = findViewById(R.id.tvCardNumberLuhn)
+        val tvCountry: TextView = findViewById(R.id.tvCountry)
+        val tvCountryLatitudeAndLongitude: TextView = findViewById(R.id.tvCountryLatitudeAndLongitude)
+        val tvBankAddress: TextView = findViewById(R.id.tvBankAddress)
+        val tvBankWebsite: TextView = findViewById(R.id.tvBankWebsite)
+        val tvBankPhoneNumber: TextView = findViewById(R.id.tvBankPhoneNumber)
+
+        tvScheme.text = bin.scheme
+        tvType.text = bin.type
+        tvBrand.text = bin.brand
+        tvPrepaid.text =  if (bin.prepaid == true) "Yes" else "No"
+        tvCardNumberLength.text = bin.number.length.toString()
+        tvCardNumberLuhn.text = bin.number.luhn.toString()
+        tvCountry.text = bin.country.emoji + " " + bin.country.name
+        tvCountryLatitudeAndLongitude.text = "(latitude: ${bin.country.latitude},\n" +
+                "longitude: ${bin.country.longitude})"
+        tvBankAddress.text = bin.bank.name + ", " + bin.bank.city
+        tvBankWebsite.text = bin.bank.url
+        tvBankPhoneNumber.text = bin.bank.phone
     }
 
     private fun readBin(connection: HttpsURLConnection) {

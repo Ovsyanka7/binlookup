@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Bundle
 import android.util.JsonReader
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,12 +26,13 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
+import javax.sql.StatementEvent
 import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
     private val bin = Bin()
-    private var historyList: List<String> = listOf()
+    private var historyList: MutableList<String> = mutableListOf()
     private val appPreferences = "mySettings"
     private val dbName = "myDB"
     private val myDB: SQLiteDatabase
@@ -54,65 +56,81 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val requestButton: Button = findViewById(R.id.RequestButton)
-        val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
-
         val mSettings = getSharedPreferences(appPreferences, Context.MODE_PRIVATE)
 
         // Если первый запуск.
         if (!mSettings.getBoolean("firstStart", false)) {
-            Databases(myDB).initialDB()
+            Databases(myDB).initialDB() // Создание базы данных.
 
             val editor: SharedPreferences.Editor = mSettings.edit()
             editor.putBoolean("firstStart", true)
             editor.apply()
         } else {
-            updateHistory()
+            historyList = Databases(myDB).getHistory()
+            showHistory()
+        }
+    }
+
+    // При нажатии на кнопку SEARCH.
+    fun onClickSearch(view: View) {
+        val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
+        val num = dataField.text.toString()
+
+        // Валидация.
+        if (num == "") {
+            return
         }
 
-        requestButton.setOnClickListener {
-            val num = dataField.text
+        addHistoryItem(num)
 
-            updateHistory(num.toString())
+        // Запрос на сервер.
+        val gitHubEndpoint = URL("https://lookup.binlist.net/$num")
+        val connection: HttpsURLConnection = gitHubEndpoint.openConnection() as HttpsURLConnection
+        connection.setRequestProperty("User-Agent", "my-rest-app-v0.1")
 
-            val gitHubEndpoint = URL("https://lookup.binlist.net/$num")
-            val connection: HttpsURLConnection = gitHubEndpoint.openConnection() as HttpsURLConnection
-            connection.setRequestProperty("User-Agent", "my-rest-app-v0.1")
-
-            thread {
-                if (connection.responseCode == 200) {
-                    readBin(connection)
-                    runOnUiThread {
-                        fillInValues()
-                    }
-                } else {
-                    runOnUiThread {
-                        Toast.makeText(
-                            applicationContext,
-                            "Некорректный ввод",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+        thread {
+            if (connection.responseCode == 200) {
+                readBin(connection)
+                runOnUiThread {
+                    fillInValues()
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(
+                        applicationContext,
+                        "Некорректный ввод",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
 
-    private fun updateHistory(newItem: String? = null) {
-        if (newItem != null) {
-            Databases(myDB).setHistory(newItem)
+    // Обновить список истории и AutoComplete Adapter.
+    private fun addHistoryItem(newItem: String) {
+        // Добавить новый запрос в базу данных.
+        Databases(myDB).setHistory(newItem)
+        historyList.add(newItem)
+
+        // Если такого запроса раньше небыло, то обновить AutoComplete и RecyclerView.
+        if (!historyList.contains(newItem)) {
+            showHistory()
         }
+    }
 
-        historyList = Databases(myDB).getHistory()
-
-        val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
-        dataField.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, historyList))
+    // Обновить\отобразить AutoComplete и RecyclerView.
+    private fun showHistory() {
+        val dataField: AutoCompleteTextView = findViewById(R.id.DataField)
+        dataField.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, historyList)
+        )
 
         val rvHistory: RecyclerView = findViewById(R.id.rvHistory)
         rvHistory.adapter = HistoryRecyclerAdapter(historyList, onItemClick)
         rvHistory.layoutManager = GridLayoutManager(this, 1)
     }
 
+    // Заполнить значения на экране.
     private fun fillInValues() {
         val tvScheme: TextView = findViewById(R.id.tvScheme)
         val tvType: TextView = findViewById(R.id.tvType)

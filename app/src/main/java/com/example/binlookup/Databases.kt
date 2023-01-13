@@ -18,7 +18,7 @@ class Databases(private val myDB: SQLiteDatabase) : AppCompatActivity() {
     }
 
     // Возвращает поисковую историю.
-    fun getHistory(): List<String> {
+    fun getHistory(): MutableList<String> {
         val list = mutableListOf<String>()
         val myCursor: Cursor = myDB.rawQuery(
             "SELECT number FROM $tableHistory",

@@ -1,18 +1,22 @@
 package com.example.binlookup
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.JsonReader
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.binlookup.classes.Bin
 import com.example.binlookup.classes.Bank
+import com.example.binlookup.classes.Bin
 import com.example.binlookup.classes.Country
 import com.example.binlookup.classes.Number
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.URL
+import java.util.*
 import javax.net.ssl.HttpsURLConnection
 import kotlin.concurrent.thread
 
@@ -199,5 +203,17 @@ class MainActivity : AppCompatActivity() {
         }
         jsonReader.endObject()
         return bank
+    }
+
+    fun onClickMap(view: View) {
+        val latitude: Float? = bin.country.latitude?.toFloat()
+        val longitude: Float? = bin.country.longitude?.toFloat()
+        if (latitude != null && longitude != null) {
+            val uri: String =
+                java.lang.String.format(Locale.ENGLISH, "geo:%f,%f", latitude, longitude)
+
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+            this.startActivity(intent)
+        }
     }
 }

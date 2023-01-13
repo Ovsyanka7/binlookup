@@ -216,4 +216,13 @@ class MainActivity : AppCompatActivity() {
             this.startActivity(intent)
         }
     }
+
+    fun onClickSite(view: View) {
+        val url = "http://" + bin.bank.url
+        if (url != null) {
+            val i = Intent(Intent.ACTION_VIEW)
+            i.data = Uri.parse(url)
+            startActivity(i)
+        }
+    }
 }

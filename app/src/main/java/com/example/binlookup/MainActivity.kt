@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Bundle
 import android.util.JsonReader
-import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -26,7 +25,6 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
-import javax.sql.StatementEvent
 import kotlin.concurrent.thread
 
 
@@ -45,10 +43,10 @@ class MainActivity : AppCompatActivity() {
         object : HistoryRecyclerAdapter.OnItemClickListener {
             override fun onItemClick(item: String) {
                 val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
-                val requestButton: Button = findViewById(R.id.RequestButton)
 
                 dataField.setText(item)
-                requestButton.callOnClick()
+                dataField.dismissDropDown() // Скрыть выпадающий список (чтобы не мешал).
+                onClickSearch()
             }
         }
 
@@ -56,6 +54,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val bSearch: Button = findViewById(R.id.bSearch)
+        val tvBankAddress: TextView = findViewById(R.id.tvBankAddress)
+        val tvBankPhoneNumber: TextView = findViewById(R.id.tvBankPhoneNumber)
+        val tvBankWebsite: TextView = findViewById(R.id.tvBankWebsite)
         val mSettings = getSharedPreferences(appPreferences, Context.MODE_PRIVATE)
 
         // Если первый запуск.
@@ -69,11 +71,16 @@ class MainActivity : AppCompatActivity() {
             historyList = Databases(myDB).getHistory()
             showHistory()
         }
+
+        bSearch.setOnClickListener {onClickSearch()}
+        tvBankAddress.setOnClickListener {onClickAddress()}
+        tvBankPhoneNumber.setOnClickListener {onClickPhoneNumber()}
+        tvBankWebsite.setOnClickListener {onClickSite()}
     }
 
     // При нажатии на кнопку SEARCH.
-    fun onClickSearch(view: View) {
-        val dataField: AutoCompleteTextView =  findViewById(R.id.DataField)
+    fun onClickSearch() {
+        val dataField: AutoCompleteTextView = findViewById(R.id.DataField)
         val num = dataField.text.toString()
 
         // Валидация.
@@ -82,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         addHistoryItem(num)
+        showHistory()
 
         // Запрос на сервер.
         val gitHubEndpoint = URL("https://lookup.binlist.net/$num")
@@ -110,19 +118,14 @@ class MainActivity : AppCompatActivity() {
     private fun addHistoryItem(newItem: String) {
         // Добавить новый запрос в базу данных.
         Databases(myDB).setHistory(newItem)
-        historyList.add(newItem)
-
-        // Если такого запроса раньше небыло, то обновить AutoComplete и RecyclerView.
-        if (!historyList.contains(newItem)) {
-            showHistory()
-        }
+        historyList.add(0, newItem)
     }
 
     // Обновить\отобразить AutoComplete и RecyclerView.
     private fun showHistory() {
         val dataField: AutoCompleteTextView = findViewById(R.id.DataField)
         dataField.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, historyList)
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, historyList.distinct())
         )
 
         val rvHistory: RecyclerView = findViewById(R.id.rvHistory)
@@ -144,18 +147,58 @@ class MainActivity : AppCompatActivity() {
         val tvBankWebsite: TextView = findViewById(R.id.tvBankWebsite)
         val tvBankPhoneNumber: TextView = findViewById(R.id.tvBankPhoneNumber)
 
-        tvScheme.text = bin.scheme
-        tvType.text = bin.type
-        tvBrand.text = bin.brand
+        // Схема.
+        tvScheme.text = validation(bin.scheme)
+        // Тип.
+        tvType.text = validation(bin.type)
+        // Бренд.
+        tvBrand.text = validation(bin.brand)
+        // Предоплата.
         tvPrepaid.text =  if (bin.prepaid == true) "Yes" else "No"
-        tvCardNumberLength.text = bin.number.length.toString()
-        tvCardNumberLuhn.text = bin.number.luhn.toString()
-        tvCountry.text = bin.country.emoji + " " + bin.country.name
-        tvCountryLatitudeAndLongitude.text = "(latitude: ${bin.country.latitude},\n" +
-                "longitude: ${bin.country.longitude})"
-        tvBankAddress.text = bin.bank.name + ", " + bin.bank.city
-        tvBankWebsite.text = bin.bank.url
-        tvBankPhoneNumber.text = bin.bank.phone
+        // Номер карты.
+        tvCardNumberLength.text = validation(bin.number.length.toString())
+        tvCardNumberLuhn.text = if (bin.number.luhn == true) "Yes" else "No"
+        // Страна.
+        tvCountry.text = validation(bin.country.emoji, bin.country.name, " ")
+        // Координаты.
+        val latitude = validation(bin.country.latitude.toString())
+        val longitude = validation(bin.country.longitude.toString())
+        tvCountryLatitudeAndLongitude.text =
+            getString(R.string.country_latitude_and_longitude, latitude, longitude)
+        // Адрес.
+        tvBankAddress.text = validation(bin.bank.name, bin.bank.city, ", ")
+        // Сайт.
+        tvBankWebsite.text = validation(bin.bank.url)
+        // Номер телефона.
+        tvBankPhoneNumber.text = validation(bin.bank.phone)
+    }
+
+    private fun validation(str: String?): String {
+        if (str == "null" || str == null) {
+            return "---"
+        } else {
+            return str
+        }
+    }
+
+    private fun validation(str1: String?, str2:String?, separator: String): String {
+        // Если обе строки null.
+        if ((str1 == "null" || str1 == null) && (str2 == "null" || str2 == null)) {
+            return "---"
+        }
+
+        // Если только первая строка null.
+        if (str1 == "null" || str1 == null) {
+            return str2.toString()
+        }
+
+        // Если только вторая строка null.
+        if (str2 == "null" || str2 == null) {
+            return str1.toString()
+        }
+
+        // Если все строки без null
+        return (str1 + separator + str2)
     }
 
     private fun readBin(connection: HttpsURLConnection) {
@@ -281,7 +324,8 @@ class MainActivity : AppCompatActivity() {
         return bank
     }
 
-    fun onClickMap() {
+    // При нажатии на адрес банка (город, название банка).
+    private fun onClickAddress() {
         val latitude: Float? = bin.country.latitude?.toFloat()
         val longitude: Float? = bin.country.longitude?.toFloat()
         if (latitude != null && longitude != null) {
@@ -293,7 +337,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onClickSite() {
+    // При нажатии на Web-сайт.
+    private fun onClickSite() {
         if (bin.bank.url != null) {
             val url = "http://" + bin.bank.url
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -301,7 +346,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onClickPhoneNumber() {
+    // При нажатии на номер телефона.
+    private fun onClickPhoneNumber() {
         val number = bin.bank.phone
         if (number != null) {
             val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))

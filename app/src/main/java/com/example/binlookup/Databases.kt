@@ -30,7 +30,7 @@ class Databases(private val myDB: SQLiteDatabase) : AppCompatActivity() {
         }
         myCursor.close()
         myDB.close()
-        return list
+        return list.asReversed()
     }
 
     // Добавляет поисковый запрос к истории.

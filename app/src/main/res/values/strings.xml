@@ -1,9 +1,10 @@
 <resources>
+<!--    Название приложения. -->
     <string name="app_name">binlookup</string>
+
+<!--    Заголовки для данных банка. Стабильно отображаются на главном окне. -->
     <string name="scheme_title">SCHEME / NETWORK</string>
     <string name="type_title">TYPE</string>
-    <string name="button_search">search</string>
-    <string name="cap">---</string>
     <string name="brand_title">BRAND</string>
     <string name="prepaid_title">PREPAID</string>
     <string name="card_number_title">CARD NUMBER</string>
@@ -11,7 +12,19 @@
     <string name="number_luhn_title">LUHN</string>
     <string name="country_title">COUNTRY</string>
     <string name="bank_title">BANK</string>
-    <string name="history_items">История запросов:</string>
-    <string name="data_field_hint">Введите номер карты</string>
+
+    <!--    Для вывода долготы и широты на главном экране. Где %1$s - это широта, а %2$s - долгота. -->
     <string name="country_latitude_and_longitude">(latitude: %1$s,\nlongitude: %2$s)</string>
+
+    <!--    Заглушка для данных, которые не удалось выгрузить, либо загрузка не проводилась. -->
+    <string name="cap">---</string>
+
+<!--    Текст на кнопке, которая выгружает информацию о банке. Находится на главном окне. -->
+    <string name="button_search">search</string>
+
+<!--    Указывает на список с историей запросов. Находится на главном окне. -->
+    <string name="history_items">История запросов:</string>
+
+<!--    Прозрачный текст-подсказка на поле для ввода номера карты. На главном окне. -->
+    <string name="data_field_hint">Введите номер карты</string>
 </resources>

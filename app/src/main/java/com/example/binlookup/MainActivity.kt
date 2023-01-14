@@ -8,20 +8,14 @@ import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Bundle
-import android.util.JsonReader
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.binlookup.classes.Bank
 import com.example.binlookup.classes.Bin
-import com.example.binlookup.classes.Country
-import com.example.binlookup.classes.Number
 import com.example.binlookup.recycleradapters.HistoryRecyclerAdapter
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.net.URL
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
@@ -29,10 +23,12 @@ import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-    private val bin = Bin()
-    private var historyList: MutableList<String> = mutableListOf()
+    private var bin = Bin() // Объект для хранения данных с сервера.
+    private var historyList: MutableList<String> = mutableListOf() // История поиска.
     private val appPreferences = "mySettings"
     private val dbName = "myDB"
+    // Я перенёс логику работы с БД в отдельный класс (Databases). И использую этот геттер, чтобы
+    // база данных работала. Можно обойтись и без геттера, но тогда эта строка будет дублироваться.
     private val myDB: SQLiteDatabase
         get() {
             return openOrCreateDatabase(dbName, MODE_PRIVATE, null)
@@ -62,7 +58,8 @@ class MainActivity : AppCompatActivity() {
 
         // Если первый запуск.
         if (!mSettings.getBoolean("firstStart", false)) {
-            Databases(myDB).initialDB() // Создание базы данных.
+            // Создание базы данных.
+            Databases(myDB).initialDB()
 
             val editor: SharedPreferences.Editor = mSettings.edit()
             editor.putBoolean("firstStart", true)
@@ -72,6 +69,7 @@ class MainActivity : AppCompatActivity() {
             showHistory()
         }
 
+        // Перенёс логику по разным функциям, чтобы код было легче читать.
         bSearch.setOnClickListener {onClickSearch()}
         tvBankAddress.setOnClickListener {onClickAddress()}
         tvBankPhoneNumber.setOnClickListener {onClickPhoneNumber()}
@@ -94,12 +92,13 @@ class MainActivity : AppCompatActivity() {
         // Запрос на сервер.
         val gitHubEndpoint = URL("https://lookup.binlist.net/$num")
         val connection: HttpsURLConnection = gitHubEndpoint.openConnection() as HttpsURLConnection
-        connection.setRequestProperty("User-Agent", "my-rest-app-v0.1")
 
         thread {
             if (connection.responseCode == 200) {
-                readBin(connection)
+                // Логика дешфровки данных с сервера перенесена в другой класс (JsonReader).
+                bin = JsonReader().readBin(connection)
                 runOnUiThread {
+                    // Заполнение данных.
                     fillInValues()
                 }
             } else {
@@ -109,14 +108,17 @@ class MainActivity : AppCompatActivity() {
                         "Некорректный ввод",
                         Toast.LENGTH_SHORT
                     ).show()
+
+                    // Удаляем данные.
+                    bin = Bin()
+                    fillInValues()
                 }
             }
         }
     }
 
-    // Обновить список истории и AutoComplete Adapter.
+    // Добавить новый элемент истории в базу данных.
     private fun addHistoryItem(newItem: String) {
-        // Добавить новый запрос в базу данных.
         Databases(myDB).setHistory(newItem)
         historyList.add(0, newItem)
     }
@@ -147,187 +149,44 @@ class MainActivity : AppCompatActivity() {
         val tvBankWebsite: TextView = findViewById(R.id.tvBankWebsite)
         val tvBankPhoneNumber: TextView = findViewById(R.id.tvBankPhoneNumber)
 
+        // Я перенёс логику валидации данных в другой класс (helper),
+        // И отправляю в этот класс заглушку на случай, если данные будут невалидными,
+        // Так как я не нашёл способа достать заглушку из ресурсов в другом классе.
+        val helper = Helper(getString(R.string.cap))
+
         // Схема.
-        tvScheme.text = validation(bin.scheme)
+        tvScheme.text = helper.validation(bin.scheme)
         // Тип.
-        tvType.text = validation(bin.type)
+        tvType.text = helper.validation(bin.type)
         // Бренд.
-        tvBrand.text = validation(bin.brand)
+        tvBrand.text = helper.validation(bin.brand)
         // Предоплата.
-        tvPrepaid.text =  if (bin.prepaid == true) "Yes" else "No"
+        tvPrepaid.text = helper.validation(bin.prepaid)
         // Номер карты.
-        tvCardNumberLength.text = validation(bin.number.length.toString())
-        tvCardNumberLuhn.text = if (bin.number.luhn == true) "Yes" else "No"
+        tvCardNumberLength.text = helper.validation(bin.number.length.toString())
+        tvCardNumberLuhn.text = helper.validation(bin.number.luhn)
         // Страна.
-        tvCountry.text = validation(bin.country.emoji, bin.country.name, " ")
+        tvCountry.text = helper.validation(bin.country.emoji, bin.country.name, " ")
         // Координаты.
-        val latitude = validation(bin.country.latitude.toString())
-        val longitude = validation(bin.country.longitude.toString())
+        val latitude = helper.validation(bin.country.latitude.toString())
+        val longitude = helper.validation(bin.country.longitude.toString())
         tvCountryLatitudeAndLongitude.text =
             getString(R.string.country_latitude_and_longitude, latitude, longitude)
         // Адрес.
-        tvBankAddress.text = validation(bin.bank.name, bin.bank.city, ", ")
+        tvBankAddress.text = helper.validation(bin.bank.name, bin.bank.city, ", ")
         // Сайт.
-        tvBankWebsite.text = validation(bin.bank.url)
+        tvBankWebsite.text = helper.validation(bin.bank.url)
         // Номер телефона.
-        tvBankPhoneNumber.text = validation(bin.bank.phone)
-    }
-
-    private fun validation(str: String?): String {
-        if (str == "null" || str == null) {
-            return "---"
-        } else {
-            return str
-        }
-    }
-
-    private fun validation(str1: String?, str2:String?, separator: String): String {
-        // Если обе строки null.
-        if ((str1 == "null" || str1 == null) && (str2 == "null" || str2 == null)) {
-            return "---"
-        }
-
-        // Если только первая строка null.
-        if (str1 == "null" || str1 == null) {
-            return str2.toString()
-        }
-
-        // Если только вторая строка null.
-        if (str2 == "null" || str2 == null) {
-            return str1.toString()
-        }
-
-        // Если все строки без null
-        return (str1 + separator + str2)
-    }
-
-    private fun readBin(connection: HttpsURLConnection) {
-        val responseBody: InputStream = connection.inputStream
-        val responseBodyReader = InputStreamReader(responseBody, "UTF-8")
-        val jsonReader = JsonReader(responseBodyReader)
-
-        jsonReader.beginObject()
-
-        while (jsonReader.hasNext()) {
-            try {
-                when (jsonReader.nextName()) {
-                    "number" -> {
-                        bin.number = readNumber(jsonReader)
-                    }
-                    "scheme" -> {
-                        bin.scheme = jsonReader.nextString()
-                    }
-                    "type" -> {
-                        bin.type = jsonReader.nextString()
-                    }
-                    "brand" -> {
-                        bin.brand = jsonReader.nextString()
-                    }
-                    "prepaid" -> {
-                        bin.prepaid = jsonReader.nextBoolean()
-                    }
-                    "country" -> {
-                        bin.country = readCountry(jsonReader)
-                    }
-                    "bank" -> {
-                        bin.bank = readBank(jsonReader)
-                    }
-                    else -> {
-                        jsonReader.skipValue()
-                    }
-                }
-            } catch (_: Exception) { }
-        }
-
-        jsonReader.close()
-        connection.disconnect()
-    }
-
-    private fun readNumber(jsonReader: JsonReader): Number {
-        val number = Number()
-        jsonReader.beginObject()
-        while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-                "length" -> {
-                    number.length = jsonReader.nextInt()
-                }
-                "luhn" -> {
-                    number.luhn = jsonReader.nextBoolean()
-                }
-                else -> {
-                    jsonReader.skipValue()
-                }
-            }
-        }
-        jsonReader.endObject()
-        return number
-    }
-
-    private fun readCountry(jsonReader: JsonReader): Country {
-        val country = Country()
-        jsonReader.beginObject()
-        while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-                "numeric" -> {
-                    country.numeric = jsonReader.nextString()
-                }
-                "alpha2" -> {
-                    country.alpha2 = jsonReader.nextString()
-                }
-                "name" -> {
-                    country.name = jsonReader.nextString()
-                }
-                "emoji" -> {
-                    country.emoji = jsonReader.nextString()
-                }
-                "currency" -> {
-                    country.currency = jsonReader.nextString()
-                }
-                "latitude" -> {
-                    country.latitude = jsonReader.nextInt()
-                }
-                "longitude" -> {
-                    country.longitude = jsonReader.nextInt()
-                }
-                else -> {
-                    jsonReader.skipValue()
-                }
-            }
-        }
-        jsonReader.endObject()
-        return country
-    }
-
-    private fun readBank(jsonReader: JsonReader): Bank {
-        val bank = Bank()
-        jsonReader.beginObject()
-        while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-                "name" -> {
-                    bank.name = jsonReader.nextString()
-                }
-                "url" -> {
-                    bank.url = jsonReader.nextString()
-                }
-                "phone" -> {
-                    bank.phone = jsonReader.nextString()
-                }
-                "city" -> {
-                    bank.city = jsonReader.nextString()
-                }
-                else -> {
-                    jsonReader.skipValue()
-                }
-            }
-        }
-        jsonReader.endObject()
-        return bank
+        tvBankPhoneNumber.text = helper.validation(bin.bank.phone)
     }
 
     // При нажатии на адрес банка (город, название банка).
+    // (Иногда переход по ссылке срабатывает, даже если вместо текста заглушка)
+    // (Это связано с тем, что, иногда, координаты есть, а адреса нет).
     private fun onClickAddress() {
         val latitude: Float? = bin.country.latitude?.toFloat()
         val longitude: Float? = bin.country.longitude?.toFloat()
+
         if (latitude != null && longitude != null) {
             val uri: String =
                 java.lang.String.format(Locale.ENGLISH, "geo:%f,%f", latitude, longitude)

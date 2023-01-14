@@ -5,6 +5,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import androidx.appcompat.app.AppCompatActivity
 
+// Вся логика с базой данных перенесена в этот класс.
 class Databases(private val myDB: SQLiteDatabase) : AppCompatActivity() {
     private val tableHistory = "tableHistory"
     
